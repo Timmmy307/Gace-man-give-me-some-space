@@ -1,19 +1,14 @@
 {
-  "name": "gace-edu-registrar",
+  "name": "gace-registrar",
   "version": "1.0.0",
   "type": "module",
-  "private": true,
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-session": "^2.0.0",
+    "body-parser": "^1.20.3",
     "express": "^4.19.2",
-    "morgan": "^1.10.0"
-  },
-  "engines": {
-    "node": ">=18"
+    "node-fetch": "^3.3.2"
   }
 }
