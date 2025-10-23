@@ -1,64 +1,228 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GACE Dashboard</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>GACE • Dashboard</title>
 <style>
-  body{margin:0;font-family:system-ui;background:linear-gradient(180deg,#0b1120,#0f172a);color:#e5e7eb;padding:40px}
-  .glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px;backdrop-filter:blur(8px)}
-  h1{margin-top:0}
-  table{width:100%;border-collapse:collapse;margin-top:20px;display:block;overflow-x:auto}
-  th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;white-space:nowrap}
-  button{padding:6px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#e5e7eb;cursor:pointer}
-  button.primary{background:linear-gradient(135deg,#2563eb,#8b5cf6);border:none}
-  .flex{display:flex;gap:10px;align-items:center;margin-top:10px}
+  :root{
+    --bg:#0b1120; --panel:rgba(255,255,255,.06); --stroke:rgba(255,255,255,.12);
+    --text:#e5e7eb; --muted:#a3a3a3; --brand-a:#2563eb; --brand-b:#8b5cf6; --ok:#22c55e;
+    --shadow:0 10px 30px rgba(0,0,0,.35); --radius-xl:18px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b1120 0%,#0f172a 60%,#0b1120 100%);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .container{width:min(1200px,92%);margin-inline:auto}
+  .glass{background:var(--panel);border:1px solid var(--stroke);backdrop-filter:saturate(140%) blur(8px);box-shadow:var(--shadow);border-radius:var(--radius-xl);padding:22px}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.08);color:var(--text);font-weight:600}
+  .btn.primary{background:linear-gradient(135deg,var(--brand-a),var(--brand-b));border-color:transparent}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  h1,h2,h3{margin:0 0 8px}
+  header{padding:16px 0;border-bottom:1px solid var(--stroke);position:sticky;top:0;background:rgba(11,17,32,.8);backdrop-filter:blur(8px);z-index:50}
+  nav{display:flex;justify-content:space-between;align-items:center}
+  a{color:inherit;text-decoration:none}
+  .pill{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .5rem;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:#a3a3a3;font-weight:600;font-size:.8rem}
+  .field{display:grid;gap:6px;margin:10px 0}
+  .field input,.field select{padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:var(--text)}
+  .cols{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+  .col-6{grid-column:span 6}
+  .col-12{grid-column:span 12}
+  @media (max-width: 900px){.cols{grid-template-columns:repeat(6,1fr)} .col-6{grid-column:span 6}}
+  @media (max-width: 640px){.cols{grid-template-columns:repeat(4,1fr)} .col-6{grid-column:span 4}}
+
+  /* Records table with horizontal scroll for long TXT */
+  .wrap-table{display:block;overflow-x:auto;border:1px solid var(--stroke);border-radius:14px}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;white-space:nowrap}
+  th{color:#cbd5e1;text-align:left;font-weight:700;padding:10px}
+  td{padding:10px;border-top:1px solid var(--stroke)}
+  tbody tr:nth-child(even) td{background:rgba(255,255,255,.03)}
+  .muted{color:var(--muted)}
+  .badge{font-size:.75rem;padding:.25rem .5rem;border-radius:8px;border:1px solid var(--stroke);background:rgba(255,255,255,.06)}
 </style>
 </head>
 <body>
-  <h1>GACE DNS Dashboard</h1>
-  <div class="glass">
-    <div class="flex">
-      <select id="type">
-        <option>A</option><option>CNAME</option><option>TXT</option>
-      </select>
-      <input id="name" placeholder="subdomain.gace.space"/>
-      <input id="content" placeholder="DNS content"/>
-      <button class="primary" id="addBtn">Add Record</button>
-    </div>
-    <table id="dnsTable">
-      <thead>
-        <tr><th>Type</th><th>Name</th><th>Content</th><th>ID</th><th>Actions</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+<header>
+  <div class="container">
+    <nav>
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <a href="/" class="pill">← Home</a>
+        <span class="pill">GACE Dashboard</span>
+      </div>
+      <div class="row">
+        <button id="btnLogout" class="btn">Sign out</button>
+        <a href="/dashboard" class="btn">Refresh</a>
+      </div>
+    </nav>
   </div>
+</header>
+
+<main class="container" style="padding:24px 0 60px">
+  <h2>Manage DNS on <span id="rootDomain" class="badge">your domain</span></h2>
+  <p class="muted" style="margin:6px 0 18px">Create, list, and delete records. Long TXT records are horizontally scrollable.</p>
+
+  <div class="cols">
+    <div class="col-6">
+      <div class="glass">
+        <h3>Create DNS record</h3>
+        <div class="field"><label>Type</label><select id="recType"><option>A</option><option>CNAME</option><option>TXT</option></select></div>
+        <div class="field"><label>Name (label or FQDN)</label><input id="recName" placeholder="sub or sub.yourdomain"/></div>
+        <div class="field"><label>Content</label><input id="recContent" placeholder="IPv4 for A, hostname for CNAME, value for TXT"/></div>
+        <div class="row">
+          <div class="field" style="flex:1"><label>TTL (seconds)</label><input id="recTTL" type="number" min="60" value="300"/></div>
+          <div class="field" style="flex:1"><label>Proxied (A/CNAME)</label><select id="recProxied"><option value="false">false</option><option value="true">true</option></select></div>
+        </div>
+        <div class="row">
+          <button id="btnCreate" class="btn primary">Create</button>
+          <button id="btnReload" class="btn">Reload</button>
+        </div>
+        <div id="createMsg" class="muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="col-6">
+      <div class="glass">
+        <h3>Filter</h3>
+        <div class="field"><label>By name (optional)</label><input id="filterName" placeholder="label or fqdn"/></div>
+        <div class="field"><label>By type (optional)</label>
+          <select id="filterType"><option value="">Any</option><option>A</option><option>CNAME</option><option>TXT</option></select>
+        </div>
+        <div class="row">
+          <button id="btnFilter" class="btn">Apply</button>
+          <button id="btnClear" class="btn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="glass">
+        <h3 style="margin-bottom:10px">Records</h3>
+        <div class="wrap-table">
+          <table id="recordsTable">
+            <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th>Proxied</th><th>ID</th><th>Actions</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="muted" style="margin-top:8px">Tip: Drag horizontally to read long TXT records.</p>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="glass">
+        <h3>Subdomain availability</h3>
+        <div class="row">
+          <input id="checkName" class="field" style="flex:1" placeholder="e.g. westside-high.yourdomain"/>
+          <button id="btnCheck" class="btn">Check</button>
+        </div>
+        <div id="checkResult" class="muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
 <script>
-async function loadRecords(){
-  const res=await fetch('/api/records');const data=await res.json();
-  const tbody=document.querySelector('#dnsTable tbody');
-  tbody.innerHTML='';
-  if(!data.result) return tbody.innerHTML='<tr><td colspan=5>No records found.</td></tr>';
-  for(const rec of data.result){
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${rec.type}</td><td>${rec.name}</td><td>${rec.content}</td><td>${rec.id}</td>
-    <td><button onclick="delRecord('${rec.id}')">🗑</button></td>`;
-    tbody.appendChild(tr);
+  // Pull root domain from server (via /api/me isn’t necessary, but we’ll set label after a quick call)
+  document.getElementById('rootDomain').textContent = (new URL(location.href)).host;
+
+  async function api(path, opts){
+    const r = await fetch(path, opts);
+    let d = null;
+    try { d = await r.json(); } catch {_=>{}}
+    return d || { ok:false, error:'bad_json' };
   }
-}
-async function delRecord(id){
-  if(!confirm('Delete record?'))return;
-  await fetch('/api/records/'+id,{method:'DELETE'});
+
+  // Sign out
+  document.getElementById('btnLogout').onclick = async ()=>{
+    await api('/api/logout', { method:'POST' });
+    location.href = '/';
+  };
+
+  const tbody = document.querySelector('#recordsTable tbody');
+  const recType = document.getElementById('recType');
+  const recName = document.getElementById('recName');
+  const recContent = document.getElementById('recContent');
+  const recTTL = document.getElementById('recTTL');
+  const recProxied = document.getElementById('recProxied');
+  const btnCreate = document.getElementById('btnCreate');
+  const btnReload = document.getElementById('btnReload');
+  const createMsg = document.getElementById('createMsg');
+
+  const filterName = document.getElementById('filterName');
+  const filterType = document.getElementById('filterType');
+  const btnFilter = document.getElementById('btnFilter');
+  const btnClear = document.getElementById('btnClear');
+
+  async function loadRecords() {
+    tbody.innerHTML = '<tr><td colspan="7">Loading…</td></tr>';
+    const qs = [];
+    if (filterName.value.trim()) qs.push('name='+encodeURIComponent(filterName.value.trim()));
+    if (filterType.value) qs.push('type='+encodeURIComponent(filterType.value));
+    const data = await api('/api/dns/list' + (qs.length ? ('?'+qs.join('&')) : ''));
+    if (!data.ok) { tbody.innerHTML = '<tr><td colspan="7">Error loading records</td></tr>'; return; }
+    const rows = (data.records||[]).map(r => {
+      const prox = r.proxied===true?'true':'false';
+      return `<tr>
+        <td>${r.type}</td>
+        <td>${r.name}</td>
+        <td style="max-width:900px;white-space:nowrap;">${r.content}</td>
+        <td>${r.ttl}</td>
+        <td>${prox}</td>
+        <td>${r.id}</td>
+        <td><button class="btn" data-del="${r.id}">Delete</button></td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows || '<tr><td colspan="7" class="muted">No records</td></tr>';
+    document.querySelectorAll('[data-del]').forEach(b => {
+      b.onclick = async ()=>{
+        if(!confirm('Delete this record?')) return;
+        const d = await api('/api/dns/'+b.getAttribute('data-del'), { method:'DELETE' });
+        if(!d.ok){ alert('Delete failed: '+(d.error||'unknown')); return; }
+        loadRecords();
+      };
+    });
+  }
+
+  btnCreate.onclick = async ()=>{
+    const payload = {
+      type: recType.value,
+      name: recName.value.trim(),
+      content: recContent.value.trim(),
+      ttl: parseInt(recTTL.value||'300', 10),
+      proxied: recProxied.value === 'true'
+    };
+    if(!payload.type || !payload.name || !payload.content){ createMsg.textContent='Fill all fields'; return; }
+    createMsg.textContent='Creating…';
+    const d = await api('/api/dns/create', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    if(!d.ok){ createMsg.textContent='Error: '+(d.error||'create_failed'); return; }
+    createMsg.textContent='Created '+d.record.type+' '+d.record.name;
+    recContent.value=''; loadRecords();
+  };
+
+  btnReload.onclick = loadRecords;
+  btnFilter.onclick = loadRecords;
+  btnClear.onclick = ()=>{ filterName.value=''; filterType.value=''; loadRecords(); };
+
+  // Availability check
+  const checkName = document.getElementById('checkName');
+  const checkResult = document.getElementById('checkResult');
+  document.getElementById('btnCheck').onclick = async ()=>{
+    const q=(checkName.value||'').trim();
+    if(!q){ checkName.focus(); return; }
+    checkResult.textContent = 'Checking…';
+    const d = await api('/api/dns/check?name='+encodeURIComponent(q));
+    if(!d.ok){ checkResult.textContent = 'Error checking'; return; }
+    if(d.available){
+      checkResult.innerHTML = '<span style="color:#86efac">Available</span> ' + d.name;
+    }else{
+      const bits=[];
+      if((d.live?.A||[]).length) bits.push('<span class="badge">A</span>');
+      if((d.live?.CNAME||[]).length) bits.push('<span class="badge">CNAME</span>');
+      if((d.live?.TXT||[]).length) bits.push('<span class="badge">TXT</span>');
+      checkResult.innerHTML = '<span style="color:#fca5a5">In use</span> '+d.name+' '+bits.join(' ');
+    }
+  };
+
+  // Initial load
   loadRecords();
-}
-document.getElementById('addBtn').onclick=async()=>{
-  const type=document.getElementById('type').value;
-  const name=document.getElementById('name').value;
-  const content=document.getElementById('content').value;
-  await fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,name,content})});
-  loadRecords();
-};
-loadRecords();
 </script>
 </body>
 </html>
