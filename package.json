@@ -1,17 +1,17 @@
 {
-  "name": "gace-onefile",
+  "name": "gace-man-give-me-some-space",
   "version": "1.0.0",
+  "description": "GACE Educational Website Registrar",
   "type": "module",
-  "private": true,
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie-session": "^2.0.0",
     "express": "^4.19.2",
-    "morgan": "^1.10.0"
+    "express-session": "^1.17.3",
+    "body-parser": "^1.20.3",
+    "bcryptjs": "^2.4.3"
   },
   "engines": {
     "node": ">=18"
