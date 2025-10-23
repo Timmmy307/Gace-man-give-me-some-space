@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GACE • Educational Website Registrar</title>
+  <meta name="description" content="GACE is an educational website registrar for schools and learning communities." />
+  <meta property="og:title" content="GACE • Educational Website Registrar" />
+  <meta property="og:description" content="Register educational subdomains, manage sites, and ship learning portals fast." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0e1726" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2307f'/%3E%3Cstop offset='1' stop-color='%2390f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='12' fill='url(%23g)'/%3E%3Cpath d='M18 34c0-8 6-14 14-14s14 6 14 14-6 14-14 14c-3 0-6-1-8-3l6-6c1 1 2 1 2 1 3 0 6-3 6-6s-3-6-6-6-6 3-6 6H18z' fill='%23fff'/%3E%3C/svg%3E" />
+  <style>
+    :root{
+      --bg: #0b1120; --panel: rgba(255,255,255,0.06); --panel-2: rgba(255,255,255,0.08);
+      --stroke: rgba(255,255,255,0.12); --text: #e5e7eb; --muted: #a3a3a3;
+      --brand-a: #2563eb; --brand-b: #8b5cf6; --accent: #22d3ee;
+      --ok: #22c55e; --warn: #f59e0b; --err: #ef4444; --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius-xl: 18px; --radius-lg: 14px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; background:
+      radial-gradient(1200px 600px at 10% -10%, rgba(37,99,235,0.35), transparent 60%),
+      radial-gradient(1000px 800px at 100% 0%, rgba(139,92,246,0.28), transparent 60%),
+      linear-gradient(180deg, #0b1120 0%, #0f172a 60%, #0b1120 100%);
+      color:var(--text); font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, Noto Sans;
+    }
+    a{color:inherit; text-decoration:none}
+    .container{width:min(1200px, 92%); margin-inline:auto}
+    .glass{background:var(--panel); border:1px solid var(--stroke); backdrop-filter:saturate(140%) blur(8px); box-shadow:var(--shadow)}
+    .btn{display:inline-flex; align-items:center; gap:.6rem; padding:.75rem 1rem; border-radius:12px; border:1px solid var(--stroke); background:var(--panel-2); color:var(--text); font-weight:600; user-select:none}
+    .btn[disabled]{cursor:not-allowed; opacity:.7}
+    .btn.primary{background:linear-gradient(135deg, var(--brand-a), var(--brand-b)); border-color:transparent}
+    .btn.small{padding:.5rem .75rem; font-weight:600; font-size:.9rem}
+    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.05); color:var(--muted); font-weight:600; font-size:.8rem}
+    header{position:sticky; top:0; z-index:50; backdrop-filter:saturate(160%) blur(8px);
+      background:linear-gradient(180deg, rgba(11,17,32,.85), rgba(11,17,32,.55)); border-bottom:1px solid var(--stroke);}
+    nav{display:flex; align-items:center; justify-content:space-between; padding:.9rem 0}
+    .brand{display:flex; align-items:center; gap:.7rem; font-weight:800; letter-spacing:.4px}
+    .brand svg{width:28px; height:28px}
+    .navlinks{display:flex; gap:1rem; align-items:center}
+    .navlinks a{color:var(--muted); padding:.5rem .6rem; border-radius:10px}
+    .navlinks a:hover{background:rgba(255,255,255,.06); color:var(--text)}
+    .hero{padding:clamp(40px, 8vw, 120px) 0 72px; position:relative}
+    .hero h1{font-size:clamp(32px, 5vw, 56px); line-height:1.05; margin:0 0 16px; letter-spacing:-.02em}
+    .hero p{color:var(--muted); font-size:clamp(16px, 2.2vw, 20px); margin:0 0 28px}
+    .hero .cta{display:flex; gap:.75rem; flex-wrap:wrap}
+    .status{display:inline-flex; align-items:center; gap:.5rem; font-weight:700; color:#c7f9d4}
+    .status-dot{width:8px; height:8px; border-radius:999px; background:var(--ok); box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+    .grid{display:grid; gap:18px}
+    .features{padding:36px 0 14px}
+    .features .card{border-radius:var(--radius-xl); padding:22px; position:relative}
+    .icon{width:28px; height:28px; display:inline-grid; place-items:center; border-radius:8px; background:linear-gradient(135deg, rgba(34,211,238,.2), rgba(139,92,246,.2)); border:1px solid var(--stroke)}
+    .muted{color:var(--muted)}
+    .panel-title{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+    .domain-search{display:flex; gap:10px; align-items:center}
+    .domain-search input{flex:1; padding:14px 16px; border-radius:12px; background:rgba(255,255,255,.07); border:1px solid var(--stroke); color:var(--text)}
+    .section{padding:80px 0}
+    .section h2{font-size:clamp(24px,3.2vw,36px); letter-spacing:-.01em; margin:0 0 12px}
+    .section p.lead{margin:0 0 30px; color:var(--muted)}
+    .pricing .plan{border-radius:var(--radius-xl); padding:26px}
+    .plan h3{margin:0 0 8px}
+    .plan .price{font-size:34px; font-weight:800; margin:6px 0 10px}
+    .plan ul{list-style:none; padding:0; margin:12px 0 18px}
+    .plan li{margin:10px 0; color:var(--muted)}
+    .steps{counter-reset: step}
+    .steps .step{padding:18px; border-radius:16px; position:relative}
+    .steps .step::before{counter-increment: step; content: counter(step); position:absolute; inset:auto auto 100% 0; transform:translateY(-10px); background:linear-gradient(135deg, var(--brand-a), var(--brand-b)); color:white; border-radius:10px; padding:4px 10px; font-weight:700; font-size:.85rem}
+    .policy{border-left:4px solid var(--brand-b); padding-left:16px}
+    footer{padding:48px 0 60px; border-top:1px solid var(--stroke); margin-top:60px}
+    .cols{display:grid; grid-template-columns: repeat(12, 1fr); gap:18px}
+    .col-4{grid-column: span 4} .col-6{grid-column: span 6} .col-12{grid-column: span 12}
+    @media (max-width: 900px){ .cols{grid-template-columns: repeat(6, 1fr)} .col-6{grid-column: span 6} .col-4{grid-column: span 6} }
+    @media (max-width: 640px){ .cols{grid-template-columns: repeat(4, 1fr)} .col-4,.col-6{grid-column: span 4} .hero .cta{flex-direction:column; align-items:stretch} }
+    .mesh{position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px); background-size: 22px 22px; mask-image: radial-gradient(70% 40% at 50% 0%, black, transparent)}
+    .toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); opacity:0; transition:.25s ease; background:#101828; color:#f1f5f9; padding:12px 14px; border-radius:12px; border:1px solid var(--stroke); box-shadow:var(--shadow); font-weight:600; z-index:999}
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:18px;height:18px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+    .inline{display:inline-flex;gap:10px;align-items:center}
+    .overlay{position:fixed; inset:0; background:rgba(11,17,32,.6); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; z-index:1000}
+    .overlay.show{display:flex}
+    .overlay .panel{background:var(--panel); border:1px solid var(--stroke); border-radius:16px; box-shadow:var(--shadow); padding:22px; width:min(520px,92%)}
+    .overlay h3{margin:0 0 8px}
+    .overlay p{margin:0 0 14px; color:var(--muted)}
+    .modal{position:fixed; inset:0; background:rgba(11,17,32,.6); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; z-index:1000}
+    .modal.show{display:flex}
+    .modal .card{background:var(--panel); border:1px solid var(--stroke); border-radius:18px; box-shadow:var(--shadow); width:min(560px, 94%); padding:22px}
+    .tabs{display:flex; gap:8px; margin-bottom:14px}
+    .tab{padding:.5rem .8rem; border:1px solid var(--stroke); border-radius:10px; cursor:pointer; user-select:none}
+    .tab.active{background:linear-gradient(135deg, var(--brand-a), var(--brand-b)); border-color:transparent; color:white}
+    .field{display:grid; gap:6px; margin:10px 0}
+    .field input{padding:12px 14px; border-radius:12px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text)}
+    .row{display:flex; gap:10px}
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <nav>
+        <a class="brand" href="#home" aria-label="GACE home">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#lg)"/><path d="M18 34c0-8 6-14 14-14s14 6 14 14-6 14-14 14c-3 0-6-1-8-3l6-6c1 1 2 1 2 1 3 0 6-3 6-6s-3-6-6-6-6 3-6 6H18z" fill="#fff"/></svg>
+          <span>GACE</span>
+          <span class="pill">Edu Registrar</span>
+        </a>
+        <div class="navlinks">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#docs">Docs</a>
+          <a href="#policy">Policy</a>
+          <a href="#support">Support</a>
+          <a class="btn small" href="/dashboard" title="Dashboard">Dashboard</a>
+          <button class="btn small" data-action="auth" data-mode="signin" title="Sign in">Sign in</button>
+          <button class="btn small primary" data-action="auth" data-mode="signup" title="Create school">Create school</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section id="home" class="hero">
+    <div class="mesh" aria-hidden="true"></div>
+    <div class="container">
+      <div class="cols">
+        <div class="col-6">
+          <span class="pill">Status <span class="status"><span class="status-dot"></span>All systems operational</span></span>
+          <h1>Register educational&nbsp;subdomains and launch learning portals in minutes.</h1>
+          <p>GACE is a lightweight registrar for schools, districts, and learning communities.</p>
+          <div class="cta">
+            <button class="btn primary" data-action="auth" data-mode="signup">Get started — it’s free</button>
+            <button class="btn" data-action="auth" data-mode="signin">View dashboard</button>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="glass" style="border-radius:var(--radius-xl); padding:18px;">
+            <div class="panel-title"><strong>Subdomain search</strong></div>
+            <div class="domain-search">
+              <input id="domainInput" type="text" placeholder="e.g. westside-high.gace.space" />
+              <button id="domainCheck" class="btn" data-action="search">Check</button>
+            </div>
+            <div id="domainResult" style="margin-top:12px; min-height:28px"></div>
+            <p class="muted" style="margin-top:10px">Instant SSL • Global edge • Student privacy oriented • Zero-code DNS presets</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="cols">
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">🏫</div>
+            <h3>Purpose-built for education</h3>
+            <p class="muted">Register and manage subdomains for schools, classes, clubs, and districts with sensible defaults.</p>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">🌐</div>
+            <h3>Subdomains without blocking</h3>
+            <p class="muted">We do not preemptively block any subdomains. If content is reported as non-educational or abusive, we’ll remove it and ban the offending IP from creating new subdomains. See Policy below.</p>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">🔒</div>
+            <h3>Privacy & security</h3>
+            <p class="muted">Auto-HTTPS, FERPA-friendly defaults, and minimal logs. Educators stay in control.</p>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">⚡</div>
+            <h3>Global edge</h3>
+            <p class="muted">CDN-optimized delivery with latency-based routing. Your learning content loads fast everywhere.</p>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">🧩</div>
+            <h3>Simple presets</h3>
+            <p class="muted">Point to static sites, LMS portals, or district dashboards with guided DNS presets.</p>
+            <button class="btn small" data-action="load" style="margin-top:8px">View presets</button>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="card glass">
+            <div class="icon" aria-hidden="true">📈</div>
+            <h3>Usage insights</h3>
+            <p class="muted">Anonymous traffic snapshots for capacity planning—no tracking of students.</p>
+            <button class="btn small" data-action="load" style="margin-top:8px">Open analytics</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="section pricing">
+    <div class="container">
+      <h2>Simple pricing</h2>
+      <p class="lead">Transparent tiers for classrooms to districts.</p>
+      <div class="cols">
+        <div class="col-4">
+          <div class="plan glass">
+            <h3>Starter</h3>
+            <div class="price">$0<span class="muted">/mo</span></div>
+            <ul>
+              <li>1 subdomain on <strong>.gace.space</strong></li>
+              <li>Auto-HTTPS</li>
+              <li>Email support (best effort)</li>
+            </ul>
+            <button class="btn" data-action="auth" data-mode="signup">Choose Starter</button>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="plan glass" style="border:1px solid rgba(34,211,238,.35)">
+            <h3>Educator</h3>
+            <div class="price">$9<span class="muted">/mo</span></div>
+            <ul>
+              <li>Up to 10 subdomains</li>
+              <li>Custom CNAME targets</li>
+              <li>Priority email support</li>
+            </ul>
+            <button class="btn primary" data-action="auth" data-mode="signup">Choose Educator</button>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="plan glass">
+            <h3>District</h3>
+            <div class="price">$49<span class="muted">/mo</span></div>
+            <ul>
+              <li>Unlimited subdomains</li>
+              <li>SSO & SAML ready</li>
+              <li>Dedicated support channel</li>
+            </ul>
+            <button class="btn" data-action="auth" data-mode="contact">Contact sales</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Docs-ish -->
+  <section id="docs" class="section">
+    <div class="container">
+      <h2>Docs (preview)</h2>
+      <div class="cols">
+        <div class="col-6">
+          <div class="glass" style="border-radius:var(--radius-xl); padding:22px">
+            <h3 style="margin-top:0">Register a subdomain</h3>
+            <ol class="muted">
+              <li>Enter your desired name (e.g., <code>westside-high</code>).</li>
+              <li>Pick a target: Static site, LMS, or external host.</li>
+              <li>Review policy and confirm ownership.</li>
+              <li>Done—your site is live on <code>*.gace.space</code>.</li>
+            </ol>
+            <button class="btn" data-action="auth" data-mode="signup">Start wizard</button>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="glass" style="border-radius:var(--radius-xl); padding:22px">
+            <h3 style="margin-top:0">DNS presets</h3>
+            <ul class="muted">
+              <li><strong>Static</strong> — serve from a CDN origin.</li>
+              <li><strong>LMS</strong> — point to Canvas, Moodle, etc.</li>
+              <li><strong>Gateway</strong> — forward to your district portal.</li>
+            </ul>
+            <button class="btn" data-action="load">View presets</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Policy -->
+  <section id="policy" class="section">
+    <div class="container">
+      <h2>Content & Subdomain Policy</h2>
+      <div class="policy glass" style="border-radius:var(--radius-xl); padding:18px;">
+        <p><strong>No blanket blocking of subdomains.</strong> We do <em>not</em> block subdomains by default. If you discover any subdomain that hosts non-educational content or violates local policy, <a href="#support">contact support</a>. Upon review, we will remove such content and <strong>ban the offending user’s IP</strong> from creating any further subdomains.</p>
+        <ul class="muted">
+          <li>Educational use only: schools, classes, clubs, districts.</li>
+          <li>No harassment, illicit, or harmful content of any kind.</li>
+          <li>Age-appropriate, student-safe materials only.</li>
+          <li>Respect copyright and privacy laws.</li>
+        </ul>
+        <p>Report issues: <a href="mailto:info@gace.space">info@gace.space</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support -->
+  <section id="support" class="section">
+    <div class="container">
+      <h2>Support</h2>
+      <p class="lead">Need help or want a subdomain reviewed? Reach us anytime.</p>
+      <div class="cols">
+        <div class="col-6">
+          <div class="glass" style="border-radius:var(--radius-xl); padding:22px">
+            <h3 style="margin-top:0">Email</h3>
+            <p class="muted">For takedowns, abuse reports, or general questions:</p>
+            <p><a class="btn" href="mailto:info@gace.space" aria-label="Email support">info@gace.space</a></p>
+            <small class="muted">The mailto link opens your email app.</small>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="glass" style="border-radius:var(--radius-xl); padding:22px">
+            <h3 style="margin-top:0">Status</h3>
+            <p class="muted">All systems operational. Any incident would appear here with timestamps and impact summaries.</p>
+            <div style="display:flex; gap:8px; align-items:center; margin-top:6px">
+              <span class="status-dot" aria-hidden="true"></span>
+              <strong>Operational</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="cols">
+        <div class="col-6">
+          <div class="brand" style="margin-bottom:10px">
+            <svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="64" height="64" rx="14" fill="url(#lg2)"/><path d="M18 34c0-8 6-14 14-14s14 6 14 14-6 14-14 14c-3 0-6-1-8-3l6-6c1 1 2 1 2 1 3 0 6-3 6-6s-3-6-6-6-6 3-6 6H18z" fill="#fff"/></svg>
+            <span>GACE</span>
+          </div>
+          <p class="muted">© <span id="year"></span> GACE is NOT affiliated with any third-party brand.</p>
+        </div>
+        <div class="col-4">
+          <div class="grid" style="grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px">
+            <a href="#features" class="pill">Features</a>
+            <a href="#pricing" class="pill">Pricing</a>
+            <a href="#docs" class="pill">Docs</a>
+            <a href="#policy" class="pill">Policy</a>
+            <a href="#support" class="pill">Support</a>
+            <a href="#home" class="pill">Top</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast + Overlay + Auth Modal -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div class="overlay" id="loadingOverlay" aria-modal="true" role="dialog" aria-labelledby="loadingTitle">
+    <div class="panel">
+      <div class="inline"><div class="spinner" aria-hidden="true"></div><h3 id="loadingTitle" style="margin:0">Working…</h3></div>
+      <p id="loadingDesc">Talking to the backend…</p>
+    </div>
+  </div>
+
+  <div class="modal" id="authModal" aria-modal="true" role="dialog" aria-labelledby="authTitle">
+    <div class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px">
+        <h3 id="authTitle" style="margin:0">Welcome</h3>
+        <button class="btn small" id="authClose" title="Close" aria-label="Close">✕</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" id="tabSignIn">Sign in</div>
+        <div class="tab" id="tabSignUp">Create account</div>
+      </div>
+      <form id="authForm">
+        <div class="field"><label>Email</label><input id="authEmail" type="email" required placeholder="you@school.edu" /></div>
+        <div class="field"><label>Password</label><input id="authPass" type="password" required placeholder="••••••••" /></div>
+        <div class="row">
+          <button class="btn primary" id="authSubmit" type="submit">Continue</button>
+          <button class="btn" type="button" id="authCancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // Smooth-scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href').slice(1);
+      const el = document.getElementById(id);
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  });
+
+  // Toast + overlay helpers
+  const toast = document.getElementById('toast');
+  function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); clearTimeout(window.__t); window.__t=setTimeout(()=>toast.classList.remove('show'), 2400); }
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingTitle = document.getElementById('loadingTitle');
+  const loadingDesc = document.getElementById('loadingDesc');
+  function showOverlay(t, d){ loadingTitle.textContent = t || 'Working…'; loadingDesc.textContent = d || 'Talking to the backend…'; overlay.classList.add('show'); }
+  function hideOverlay(){ overlay.classList.remove('show'); }
+
+  // Subdomain check (homepage)
+  const domainInput = document.getElementById('domainInput');
+  const domainCheck = document.getElementById('domainCheck');
+  const domainResult = document.getElementById('domainResult');
+  async function startSearch(){
+    const q = (domainInput.value || '').trim();
+    if(!q){ domainInput.focus(); showToast('Enter a subdomain like westside-high.gace.space'); return; }
+    domainInput.setAttribute('disabled','true');
+    domainCheck.setAttribute('disabled','true');
+    domainResult.innerHTML = '<span class="inline"><span class="spinner"></span> <span>Checking availability…</span></span>';
+    try {
+      const r = await fetch('/api/dns/check?name='+encodeURIComponent(q));
+      const d = await r.json();
+      if(!d.ok) throw new Error(d.error);
+      if(d.available){
+        domainResult.innerHTML = '<strong style="color:#86efac">Available</strong> <span class="muted">'+d.name+'</span>';
+      }else{
+        const badges=[];
+        if((d.live.A||[]).length) badges.push('<span class="pill">A</span>');
+        if((d.live.CNAME||[]).length) badges.push('<span class="pill">CNAME</span>');
+        if((d.live.TXT||[]).length) badges.push('<span class="pill">TXT</span>');
+        domainResult.innerHTML = '<strong style="color:#fca5a5">In use</strong> <span class="muted">'+d.name+'</span> '+(badges.join(' ')||'');
+      }
+    } catch(e){
+      domainResult.innerHTML = '<span style="color:#fca5a5">Error checking</span>';
+    } finally {
+      domainInput.removeAttribute('disabled');
+      domainCheck.removeAttribute('disabled');
+    }
+  }
+  domainCheck?.addEventListener('click', startSearch);
+  domainInput?.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); startSearch(); }});
+
+  // Auth modal
+  const authModal = document.getElementById('authModal');
+  const tabSignIn = document.getElementById('tabSignIn');
+  const tabSignUp = document.getElementById('tabSignUp');
+  const authTitle = document.getElementById('authTitle');
+  const authClose = document.getElementById('authClose');
+  const authCancel = document.getElementById('authCancel');
+  const authForm = document.getElementById('authForm');
+  const authEmail = document.getElementById('authEmail');
+  const authPass = document.getElementById('authPass');
+  let authMode = 'signin';
+
+  function openAuth(mode){
+    authMode = (mode === 'signup') ? 'signup' : 'signin';
+    const signUp = authMode === 'signup';
+    tabSignIn.classList.toggle('active', !signUp);
+    tabSignUp.classList.toggle('active', signUp);
+    authTitle.textContent = signUp ? 'Create your account' : 'Welcome back';
+    authModal.classList.add('show');
+  }
+  function closeAuth(){ authModal.classList.remove('show'); }
+
+  tabSignIn.addEventListener('click', () => openAuth('signin'));
+  tabSignUp.addEventListener('click', () => openAuth('signup'));
+  authClose.addEventListener('click', closeAuth);
+  authCancel.addEventListener('click', closeAuth);
+
+  document.querySelectorAll('[data-action="auth"]').forEach(btn => {
+    btn.addEventListener('click', () => openAuth(btn.getAttribute('data-mode')));
+  });
+
+  // Signup → 15s spinner → ask for admin pin
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = authEmail.value.trim();
+    const password = authPass.value;
+    if(!email || !password) return;
+
+    closeAuth();
+    showOverlay(authMode==='signup'?'Creating your account…':'Signing you in…', 'Contacting backend…');
+
+    // 15s + jitter for the spinner
+    const delay = 15000 + Math.floor(Math.random()*1500);
+    await new Promise(r => setTimeout(r, delay));
+
+    if(authMode==='signup'){
+      hideOverlay();
+      const pin = prompt('Enter admin pin to finish signup (2529 or 2520):');
+      if(!pin){ showToast('Signup cancelled'); return; }
+      showOverlay('Finalizing signup…');
+      const res = await fetch('/api/signup', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password, adminPin: pin })
+      });
+      const data = await res.json(); hideOverlay();
+      if(!data.ok){ showToast('Error: '+(data.error||'signup_failed')); return; }
+      location.href = '/dashboard';
+    } else {
+      const res = await fetch('/api/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json(); hideOverlay();
+      if(!data.ok){ showToast('Error: '+(data.error||'signin_failed')); return; }
+      location.href = '/dashboard';
+    }
+  });
+</script>
+</body>
+</html>
