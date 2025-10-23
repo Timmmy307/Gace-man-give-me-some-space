@@ -479,7 +479,7 @@
 
     if(authMode==='signup'){
       hideOverlay();
-      const pin = prompt('Enter admin pin to finish signup (2529 or 2520):');
+      const pin = prompt('Enter admin pin to finish signup:');
       if(!pin){ showToast('Signup cancelled'); return; }
       showOverlay('Finalizing signup…');
       const res = await fetch('/api/signup', {
