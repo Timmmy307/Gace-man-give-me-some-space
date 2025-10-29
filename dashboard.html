@@ -1,126 +1,280 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>GACE • Dashboard</title>
-<style>
-  body{margin:0;background:linear-gradient(180deg,#0b1120,#0f172a);color:#e5e7eb;font:16px/1.5 system-ui}
-  .container{width:min(1200px,92%);margin-inline:auto}
-  .glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(8px);border-radius:16px;padding:20px;margin-top:20px}
-  button{padding:6px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#e5e7eb;cursor:pointer}
-  button.primary{background:linear-gradient(135deg,#2563eb,#8b5cf6);border:none}
-  input,select{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e5e7eb}
-  table{width:100%;border-collapse:collapse;margin-top:16px;min-width:900px}
-  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.1);white-space:nowrap;text-align:left}
-  tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
-  .wrap{overflow-x:auto}
-  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .muted{color:#9ca3af}
-</style>
+  <meta charset="utf-8" />
+  <title>GACE Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* minimal styling, re-use main site's colors lightly */
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; background:#071022;color:#e6eef8;padding:18px}
+    .row{display:flex;gap:12px;align-items:center}
+    .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:12px;border-radius:10px;margin-bottom:12px}
+    input,select,textarea{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;width:100%}
+    button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#2b6be6;color:white;cursor:pointer}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    pre{background:#031226;padding:8px;border-radius:6px;overflow:auto}
+    .muted{color:#9fb0ca;font-size:0.9rem}
+    .toast{position:fixed;right:18px;top:18px;background:#0f1724;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+  </style>
 </head>
 <body>
-<div class="container">
-  <h1>GACE DNS Dashboard</h1>
-  <div class="flex">
-    <button id="logout">Sign Out</button>
-    <button id="reload">Reload</button>
-  </div>
-
-  <div class="glass">
-    <h3>Add New Record</h3>
-    <div class="flex">
-      <select id="type"><option>A</option><option>CNAME</option><option>TXT</option></select>
-      <input id="name" placeholder="subdomain.gace.space"/>
-      <input id="content" placeholder="1.1.1.1 or target.example.com"/>
-      <input id="ttl" type="number" value="300" min="60"/>
-      <select id="proxied"><option value="false">false</option><option value="true">true</option></select>
-      <button class="primary" id="create">Create</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <h2 style="margin:0">GACE Dashboard</h2>
+    <div class="row">
+      <div id="who" class="muted">Checking...</div>
+      <button id="signOut" class="btn-ghost" title="Sign out">Sign out</button>
     </div>
-    <p id="createMsg" class="muted"></p>
   </div>
 
-  <div class="glass wrap">
-    <h3>Existing Records</h3>
-    <table id="table">
-      <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th>Proxied</th><th>Actions</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <div class="card">
+    <strong>Create / Edit DNS record</strong>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
+      <div>
+        <label>Type</label>
+        <select id="recType">
+          <option>A</option><option>AAAA</option><option>CNAME</option><option>TXT</option><option>MX</option>
+          <option>NS</option><option>SRV</option><option>CAA</option><option>PTR</option><option>LOC</option>
+          <option>HTTPS</option><option>SPF</option><option>URI</option><option value="CUSTOM">CUSTOM</option>
+        </select>
+        <input id="recTypeCustom" placeholder="Custom type (if CUSTOM)..." style="display:none;margin-top:8px" />
+      </div>
+      <div>
+        <label>Name</label>
+        <input id="recName" placeholder="sub.gace.space or @ for root" />
+        <div class="muted" style="margin-top:6px">Use '@' to target root domain (e.g. gace.space)</div>
+      </div>
+      <div>
+        <label>Content</label>
+        <input id="recContent" placeholder="IP, target, text, etc." />
+        <div class="muted" style="margin-top:6px">For SRV/MX you can use Extra JSON or priority field below.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
+      <div>
+        <label>TTL (seconds)</label>
+        <input id="recTTL" type="number" placeholder="300" />
+      </div>
+      <div>
+        <label>Proxied</label>
+        <select id="recProxied"><option value="false">false</option><option value="true">true</option></select>
+      </div>
+      <div>
+        <label>Priority (MX)</label>
+        <input id="recPriority" type="number" placeholder="10" />
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <label>Extra JSON (optional)</label>
+      <textarea id="recExtra" rows="4" placeholder='e.g. { "data": { "priority":10, "weight":5, "port":443, "target":"host.example.com" } }'></textarea>
+      <div class="muted" style="margin-top:6px">Use this to pass Cloudflare-specific objects like <code>data</code> for SRV or any other field.</div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button id="createRec" class="btn">Create record</button>
+      <button id="updateRec" class="btn" style="display:none;background:#16a34a">Save changes</button>
+      <button id="resetForm" class="btn-ghost">Reset</button>
+    </div>
+    <input type="hidden" id="editingId" />
   </div>
-</div>
+
+  <div style="margin-top:14px" class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>Existing records</strong>
+      <div class="muted">Click Edit to load into the form</div>
+    </div>
+    <div style="margin-top:10px;overflow:auto">
+      <table id="recordsTable">
+        <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th>Proxied</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none"></div>
 
 <script>
-async function api(path, opt={}) {
-  const res = await fetch(path, opt);
-  try{return await res.json();}catch{return {ok:false,error:"bad_json"}}
-}
+  const toastEl = document.getElementById('toast');
+  function showToast(msg){ toastEl.textContent = msg; toastEl.style.display='block'; clearTimeout(window.__t); window.__t=setTimeout(()=>toastEl.style.display='none',3000); }
 
-// session check
-(async()=>{
-  const me = await api('/api/me');
-  if(!me.ok || !me.user){location.href='/index.html';return;}
+  async function whoami(){
+    const r = await fetch('/api/me'); const d = await r.json();
+    if(d.ok && d.user) document.getElementById('who').textContent = d.user.email;
+    else location.href = '/';
+  }
+  whoami();
+
+  document.getElementById('signOut').addEventListener('click', async () => {
+    await fetch('/api/logout', {method:'POST'});
+    location.href = '/';
+  });
+
+  const recType = document.getElementById('recType');
+  const recTypeCustom = document.getElementById('recTypeCustom');
+  recType.addEventListener('change', () => {
+    recTypeCustom.style.display = recType.value === 'CUSTOM' ? 'block' : 'none';
+  });
+
+  async function loadRecords(){
+    const tbody = document.querySelector('#recordsTable tbody');
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Loading…</td></tr>';
+    try {
+      const r = await fetch('/api/records');
+      const d = await r.json();
+      if(!d.success && !d.result){ // Cloudflare returns {success: false} sometimes
+        // try to handle generic envelope
+      }
+      const items = d.result || d;
+      tbody.innerHTML = '';
+      items.forEach(rec => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${rec.type}</td>
+                        <td>${rec.name}</td>
+                        <td><pre style="margin:0">${(rec.content||'')}</pre></td>
+                        <td>${rec.ttl||''}</td>
+                        <td>${rec.proxied? 'true':'false'}</td>
+                        <td>
+                          <button class="btn-ghost" data-id="${rec.id}" data-action="edit">Edit</button>
+                          <button class="btn-ghost" data-id="${rec.id}" data-action="del">Delete</button>
+                        </td>`;
+        tbody.appendChild(tr);
+      });
+    } catch(e){
+      tbody.innerHTML = '<tr><td colspan="6" class="muted">Error loading records</td></tr>';
+    }
+  }
   loadRecords();
-})();
 
-const tbody=document.querySelector('#table tbody');
-async function loadRecords(){
-  tbody.innerHTML='<tr><td colspan="6">Loading…</td></tr>';
-  const data=await api('/api/records');
-  if(!data.result){tbody.innerHTML='<tr><td colspan="6">Error loading</td></tr>';return;}
-  tbody.innerHTML='';
-  data.result.forEach(rec=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><input class="type" value="${rec.type}"></td>
-      <td><input class="name" value="${rec.name}"></td>
-      <td><input class="content" value="${rec.content}" style="min-width:300px"></td>
-      <td><input class="ttl" type="number" value="${rec.ttl}"></td>
-      <td><select class="proxied"><option value="true"${rec.proxied?' selected':''}>true</option><option value="false"${!rec.proxied?' selected':''}>false</option></select></td>
-      <td>
-        <button data-save="${rec.id}" class="primary">Save</button>
-        <button data-del="${rec.id}">Delete</button>
-      </td>`;
-    tbody.appendChild(tr);
+  // helper to read form into payload
+  function getFormPayload(){
+    const type = recType.value === 'CUSTOM' ? (recTypeCustom.value.trim() || 'CUSTOM') : recType.value;
+    const name = document.getElementById('recName').value.trim();
+    const content = document.getElementById('recContent').value.trim();
+    const ttlVal = document.getElementById('recTTL').value;
+    const proxied = document.getElementById('recProxied').value === 'true';
+    const priorityVal = document.getElementById('recPriority').value;
+    const extraRaw = document.getElementById('recExtra').value.trim();
+
+    const payload = { type, name, content };
+    if(ttlVal) payload.ttl = Number(ttlVal);
+    if(typeof proxied === 'boolean') payload.proxied = proxied;
+    if(priorityVal) payload.priority = Number(priorityVal);
+
+    if(extraRaw){
+      try {
+        const extraObj = JSON.parse(extraRaw);
+        // put extra under "extra" to be merged server-side, but server also accepts top-level fields
+        payload.extra = extraObj;
+      } catch(e){
+        throw new Error('Extra JSON is invalid: ' + e.message);
+      }
+    }
+    return payload;
+  }
+
+  document.getElementById('createRec').addEventListener('click', async () => {
+    try {
+      const payload = getFormPayload();
+      showToast('Creating…');
+      const res = await fetch('/api/records', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const d = await res.json();
+      if(!d.success && !d.ok && d.errors && d.errors.length) throw new Error(d.errors.map(x=>x.message).join('; '));
+      // Cloudflare returns {success:true, result: {...}} but our server proxies that to client
+      showToast('Created');
+      resetForm();
+      loadRecords();
+    } catch(err){
+      showToast('Error: ' + (err.message || err));
+    }
   });
 
-  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
-    if(!confirm('Delete this record?'))return;
-    await fetch('/api/records/'+b.dataset.del,{method:'DELETE'});
-    loadRecords();
+  document.getElementById('resetForm').addEventListener('click', resetForm);
+  function resetForm(){
+    document.getElementById('recType').value = 'A';
+    document.getElementById('recTypeCustom').value = '';
+    document.getElementById('recName').value = '';
+    document.getElementById('recContent').value = '';
+    document.getElementById('recTTL').value = '';
+    document.getElementById('recProxied').value = 'false';
+    document.getElementById('recPriority').value = '';
+    document.getElementById('recExtra').value = '';
+    document.getElementById('editingId').value = '';
+    document.getElementById('createRec').style.display = 'inline-block';
+    document.getElementById('updateRec').style.display = 'none';
+  }
+
+  // table button handling (edit / delete)
+  document.querySelector('#recordsTable tbody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const id = btn.getAttribute('data-id');
+    const action = btn.getAttribute('data-action');
+    if(action === 'edit'){
+      // fetch single record detail from server listing (we already loaded them), but simpler: fetch full list and find
+      try {
+        const r = await fetch('/api/records'); const d = await r.json();
+        const items = d.result || d;
+        const rec = items.find(x=>x.id===id);
+        if(!rec){ showToast('Record not found'); return; }
+        document.getElementById('recType').value = rec.type || 'A';
+        if(![...document.getElementById('recType').options].some(o=>o.value===rec.type)) {
+          document.getElementById('recType').value = 'CUSTOM';
+          document.getElementById('recTypeCustom').style.display='block';
+          document.getElementById('recTypeCustom').value = rec.type;
+        } else {
+          document.getElementById('recTypeCustom').style.display='none';
+          document.getElementById('recTypeCustom').value = '';
+        }
+        document.getElementById('recName').value = rec.name || '';
+        document.getElementById('recContent').value = rec.content || '';
+        document.getElementById('recTTL').value = rec.ttl || '';
+        document.getElementById('recProxied').value = rec.proxied ? 'true':'false';
+        document.getElementById('recPriority').value = rec.priority || '';
+        // put raw JSON of record in extra for manual edits (useful for data objects)
+        const copyable = Object.assign({}, rec);
+        delete copyable.type; delete copyable.name; delete copyable.content; delete copyable.ttl; delete copyable.proxied; delete copyable.priority; delete copyable.id; delete copyable.zone_id;
+        document.getElementById('recExtra').value = JSON.stringify(copyable, null, 2);
+        document.getElementById('editingId').value = id;
+        document.getElementById('createRec').style.display = 'none';
+        document.getElementById('updateRec').style.display = 'inline-block';
+        showToast('Loaded record into form');
+      } catch(e){
+        showToast('Error loading record');
+      }
+    } else if(action === 'del'){
+      if(!confirm('Delete this record?')) return;
+      try {
+        const r = await fetch('/api/records/' + id, { method: 'DELETE' });
+        const d = await r.json();
+        if(!d.success && !d.result && d.errors) throw new Error(d.errors.map(x=>x.message).join('; '));
+        showToast('Deleted');
+        loadRecords();
+      } catch(e){
+        showToast('Delete failed: ' + (e.message || e));
+      }
+    }
   });
 
-  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{
-    const tr=b.closest('tr');
-    b.textContent='Saving…';
-    const body={
-      type:tr.querySelector('.type').value,
-      name:tr.querySelector('.name').value,
-      content:tr.querySelector('.content').value,
-      ttl:+tr.querySelector('.ttl').value,
-      proxied:tr.querySelector('.proxied').value==='true'
-    };
-    const res=await fetch('/api/records/'+b.dataset.save,{
-      method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
-    });
-    const j=await res.json();
-    b.textContent=j.success?'Saved ✅':'Error ❌';
-    setTimeout(()=>b.textContent='Save',1500);
+  document.getElementById('updateRec').addEventListener('click', async () => {
+    const id = document.getElementById('editingId').value;
+    if(!id){ showToast('No record selected'); return; }
+    try {
+      const payload = getFormPayload();
+      showToast('Updating…');
+      const res = await fetch('/api/records/' + id, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const d = await res.json();
+      if(!d.success && !d.result && d.errors) throw new Error(d.errors.map(x=>x.message).join('; '));
+      showToast('Updated');
+      resetForm();
+      loadRecords();
+    } catch(err){
+      showToast('Error: ' + (err.message || err));
+    }
   });
-}
 
-document.getElementById('create').onclick=async()=>{
-  const body={
-    type:type.value,name:name.value,content:content.value,
-    ttl:+ttl.value,proxied:proxied.value==='true'
-  };
-  const res=await fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await res.json();
-  createMsg.textContent=j.success?'Created ✅':JSON.stringify(j.errors||j);
-  loadRecords();
-};
-
-document.getElementById('logout').onclick=async()=>{await api('/api/logout',{method:'POST'});location.href='/index.html';};
-document.getElementById('reload').onclick=loadRecords;
 </script>
 </body>
 </html>

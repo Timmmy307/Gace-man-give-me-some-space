@@ -98,15 +98,29 @@ app.post("/api/records", async (req, res) => {
   if (!req.session.user) return res.status(401).json({ ok: false, msg: "Not logged in" });
   const { type, name, content, ttl, proxied } = req.body;
   try {
+    // Build a body object and merge any extra fields from the client
+    const bodyObj = {};
+    if (type !== undefined) bodyObj.type = type;
+    if (name !== undefined) bodyObj.name = name;
+    if (content !== undefined) bodyObj.content = content;
+    if (ttl !== undefined) bodyObj.ttl = ttl;
+    if (proxied !== undefined) bodyObj.proxied = proxied;
+
+    // Merge any extra fields (priority, data, etc.) — allow arbitrary passthrough
+    // Client can send "extra": { ... } or put fields at top level; both are supported.
+    if (req.body.extra && typeof req.body.extra === "object") {
+      Object.assign(bodyObj, req.body.extra);
+    }
+    // Merge any top-level unknown fields as well (safeguarded)
+    for (const k of Object.keys(req.body)) {
+      if (!["type","name","content","ttl","proxied","extra"].includes(k)) {
+        bodyObj[k] = req.body[k];
+      }
+    }
+
     const data = await cfFetch(`/dns_records`, {
       method: "POST",
-      body: JSON.stringify({
-        type,
-        name,
-        content,
-        ttl: ttl || 300,
-        proxied: proxied || false,
-      }),
+      body: JSON.stringify(bodyObj),
     });
     res.json(data);
   } catch (err) {
@@ -119,9 +133,25 @@ app.patch("/api/records/:id", async (req, res) => {
   if (!req.session.user) return res.status(401).json({ ok: false, msg: "Not logged in" });
   const { type, name, content, ttl, proxied } = req.body;
   try {
+    const bodyObj = {};
+    if (type !== undefined) bodyObj.type = type;
+    if (name !== undefined) bodyObj.name = name;
+    if (content !== undefined) bodyObj.content = content;
+    if (ttl !== undefined) bodyObj.ttl = ttl;
+    if (proxied !== undefined) bodyObj.proxied = proxied;
+
+    if (req.body.extra && typeof req.body.extra === "object") {
+      Object.assign(bodyObj, req.body.extra);
+    }
+    for (const k of Object.keys(req.body)) {
+      if (!["type","name","content","ttl","proxied","extra"].includes(k)) {
+        bodyObj[k] = req.body[k];
+      }
+    }
+
     const data = await cfFetch(`/dns_records/${req.params.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ type, name, content, ttl, proxied }),
+      body: JSON.stringify(bodyObj),
     });
     res.json(data);
   } catch (err) {

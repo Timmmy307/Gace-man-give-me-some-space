@@ -131,7 +131,7 @@
           <p>GACE is a lightweight registrar for schools, districts, and learning communities.</p>
           <div class="cta">
             <button class="btn primary" data-action="auth" data-mode="signup">Get started — it’s free</button>
-            <button class="btn" data-action="auth" data-mode="signin">View dashboard</button>
+            <a class="btn" href="/dashboard">View dashboard</a>
           </div>
         </div>
         <div class="col-6">
@@ -461,6 +461,11 @@
 
   document.querySelectorAll('[data-action="auth"]').forEach(btn => {
     btn.addEventListener('click', () => openAuth(btn.getAttribute('data-mode')));
+  });
+
+  // Make "View presets" / "Open analytics" and other data-action="load" buttons go to the dashboard
+  document.querySelectorAll('[data-action="load"]').forEach(btn => {
+    btn.addEventListener('click', () => { location.href = '/dashboard'; });
   });
 
   // Signup → 15s spinner → ask for admin pin
